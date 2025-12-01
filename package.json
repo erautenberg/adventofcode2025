@@ -1,0 +1,19 @@
+{
+  "name": "aoc5",
+  "version": "1.0.0",
+  "description": "Emily's JavaScript solutions to Advent of Code 2025",
+  "main": "index.js",
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  },
+  "scripts": {
+    "start": "node public/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "createDay": "node public/scripts/create.js"
+  },
+  "author": "Emily Rautenberg",
+  "license": "MIT",
+  "devDependencies": {
+    "express": "^4.18.2"
+  }
+}
