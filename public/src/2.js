@@ -35,10 +35,14 @@ const getInvalidIdTotal = (ranges) => {
   return getInvalidIds(ranges).reduce((acc, curr) => (acc += curr), 0);
 };
 
+const getDigitCount = (number) => {
+  return Math.abs(number).toString().length;
+};
+
 const getIncrement = (num) => {
   const str = num.toString();
   const len = str.length;
-  // length / 2 of the number, minus 1 equals number of 0s between the two 1's
+  // length / 2 of the number minus 1 equals number of 0s between the two 1's
   return parseInt('1' + '0'.repeat(len / 2 - 1) + '1');
 };
 
@@ -48,38 +52,42 @@ const checkValidity = (num) => {
   return str.slice(0, len / 2) !== str.slice(len / 2);
 };
 
+const getNextEvenDigitNumber = (num) => {
+  let curr = num;
+  let len = getDigitCount(curr);
+
+  // if odd number of digits, jump to next power of 10
+  if (len % 2 !== 0) curr = parseInt('1' + '0'.repeat(len));
+
+  const increment = getIncrement(curr);
+  // find the lowest multiple of the increment within range
+  curr = Math.ceil(curr / increment) * increment;
+  len = getDigitCount(curr);
+
+  return { curr, increment, len };
+};
+
 const getInvalidIds = (ranges) => {
   let invalid = [];
   ranges.forEach(([start, end]) => {
-    let curr = start;
-    let len = curr.toString().length;
-    if (len % 2 !== 0) {
-      curr = parseInt('1' + '0'.repeat(len));
-      len = curr.toString().length;
-    }
-    let increment = getIncrement(curr);
-    curr = Math.ceil(curr / increment) * increment;
+    let { curr, increment, len } = getNextEvenDigitNumber(start);
 
     while (curr <= end) {
       if (!checkValidity(curr)) {
         invalid.push(curr);
       }
 
+      // if the increment increases the current number to have more digits,
+      // recalculate the starting number to ensure we did not skip any potentiall invalid IDs
+      // if the digit length is the same, just keep incrementing, no need to do the extra calculations again
       let newCurr = curr + increment;
-      let newLen = newCurr.toString().length;
+      let newLen = getDigitCount(newCurr);
       if (newLen === len) {
         curr = newCurr;
       } else {
-        if (newLen % 2 !== 0) {
-          curr = parseInt('1' + '0'.repeat(newLen));
-          len = curr.toString().length;
-        }
-
-        increment = getIncrement(curr);
-        curr = Math.ceil(curr / increment) * increment;
+        ({ curr, increment, len } = getNextEvenDigitNumber(newCurr));
       }
     }
   });
-  console.log(invalid);
   return invalid;
 };
