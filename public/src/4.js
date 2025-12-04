@@ -16,7 +16,7 @@ parseData(DAY4, (input) => {
 
   const timeString2 = `Day ${DAY4}, Part 2 Execution Time`;
   console.time(timeString2);
-  const part2 = '';
+  const part2 = countAccessibleTotal(rolls);
   console.timeEnd(timeString2);
 
   console.timeEnd(timeStringDay4);
@@ -31,6 +31,7 @@ const formatRolls = (input) => {
 };
 
 const ROLL_CHAR = '@';
+const EMPTY_CHAR = '.';
 
 const checkIfAccessible = (rolls, row = 0, col = 0, max = 4) => {
   let count = 0;
@@ -58,4 +59,27 @@ const countAccessible = (rolls) => {
     });
     return acc;
   }, 0);
+};
+
+const countAccessibleTotal = (rolls, total = 0) => {
+  const rollsToRemove = [];
+
+  const count = rolls.reduce((acc, curr, row) => {
+    curr.forEach((char, col) => {
+      if (char === ROLL_CHAR && checkIfAccessible(rolls, row, col)) {
+        acc++;
+        rollsToRemove.push([row, col]);
+      }
+    });
+    return acc;
+  }, 0);
+
+  if (count === 0) return total;
+
+  let newRolls = rolls.map((row) => [...row]);
+  rollsToRemove.forEach(([r, c]) => {
+    if (newRolls[r] && newRolls[r][c]) newRolls[r][c] = EMPTY_CHAR;
+  });
+
+  return countAccessibleTotal(newRolls, total + count);
 };
