@@ -16,7 +16,7 @@ parseData(DAY5, (input) => {
 
   const timeString2 = `Day ${DAY5}, Part 2 Execution Time`;
   console.time(timeString2);
-  const part2 = '';
+  const part2 = countFreshIds(database);
   console.timeEnd(timeString2);
 
   console.timeEnd(timeStringDay5);
@@ -80,6 +80,13 @@ const countFresh = ({ fresh, available }) => {
     if (checkIfInRange(fresh, curr)) {
       acc++;
     }
+    return acc;
+  }, 0);
+};
+
+const countFreshIds = ({ fresh }) => {
+  return fresh.reduce((acc, curr) => {
+    acc += curr[1] - curr[0] + 1;
     return acc;
   }, 0);
 };
