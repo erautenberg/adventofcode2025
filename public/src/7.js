@@ -16,7 +16,7 @@ parseData(DAY7, (input) => {
 
   const timeString2 = `Day ${DAY7}, Part 2 Execution Time`;
   console.time(timeString2);
-  const part2 = '';
+  const part2 = countSplitOptions(manifold, start);
   console.timeEnd(timeString2);
 
   console.timeEnd(timeStringDay7);
@@ -56,4 +56,28 @@ const getSplits = (manifold, [r, c], splits, visited) => {
 
 const countSplits = (manifold, start) => {
   return getSplits(manifold, start, new Set(), new Set()).size;
+};
+
+const countSplitOptions = (manifold, [r, c], splitOptions = new Map()) => {
+  if (r === manifold.length - 1) return 1;
+
+  const splitPos = `${r},${c}`;
+  if (splitOptions.has(splitPos)) return splitOptions.get(splitPos);
+
+  let count = 0;
+  if (manifold[r] && manifold[r][c] === '^') {
+    const splitLeft =
+      manifold[r] && manifold[r][c - 1]
+        ? countSplitOptions(manifold, [r, c - 1], splitOptions)
+        : 0;
+    const splitRight =
+      manifold[r] && manifold[r][c + 1]
+        ? countSplitOptions(manifold, [r, c + 1], splitOptions)
+        : 0;
+    count = splitLeft + splitRight;
+  } else {
+    count = countSplitOptions(manifold, [r + 1, c], splitOptions);
+  }
+  splitOptions.set(splitPos, count);
+  return count;
 };
