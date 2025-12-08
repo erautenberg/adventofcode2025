@@ -12,12 +12,14 @@ parseData(DAY8, (input) => {
   const timeString1 = `Day ${DAY8}, Part 1 Execution Time`;
   console.time(timeString1);
   const distances = getAllDistances(junctionBoxes);
-  const part1 = multiplyCircuits(getCircuits(distances, 1000));
+  const { circuits } = getCircuits(junctionBoxes, distances, 1000);
+  const part1 = multiplyCircuits(circuits);
   console.timeEnd(timeString1);
 
   const timeString2 = `Day ${DAY8}, Part 2 Execution Time`;
   console.time(timeString2);
-  const part2 = '';
+  const { lastConnection } = getCircuits(junctionBoxes, distances);
+  const part2 = multiplyLastConnection(junctionBoxes, lastConnection);
   console.timeEnd(timeString2);
 
   console.timeEnd(timeStringDay8);
@@ -53,43 +55,50 @@ const getAllDistances = (junctionBoxes) => {
   return distanceMap;
 };
 
-const getCircuits = (distanceMap, connections = 10) => {
-  const sortedDistances = [...distanceMap.keys()]
-    .sort((a, b) => a - b)
-    .slice(0, connections);
+const getCircuits = (junctionBoxes, distanceMap, maxConnections = 0) => {
+  let sortedDistances = [...distanceMap.keys()].sort((a, b) => a - b);
+  if (maxConnections) {
+    sortedDistances = sortedDistances.slice(0, maxConnections);
+  }
 
-  const circuits = sortedDistances.reduce((acc, curr) => {
+  let circuits = [];
+  let lastConnection = [];
+  for (let i = 0; i < sortedDistances.length; i++) {
+    const curr = sortedDistances[i];
     const [a, b] = distanceMap.get(curr);
 
-    if (!acc.length) {
-      acc.push(new Set([a, b]));
+    if (!circuits.length) {
+      circuits.push(new Set([a, b]));
     } else {
-      const circuitWithA = acc.findIndex((c) => c.has(a));
-      const circuitWithB = acc.findIndex((c) => c.has(b));
+      const circuitWithA = circuits.findIndex((c) => c.has(a));
+      const circuitWithB = circuits.findIndex((c) => c.has(b));
 
       if (circuitWithA === -1 && circuitWithB === -1) {
         // neither is in an existing circuit
-        acc.push(new Set([a, b]));
+        circuits.push(new Set([a, b]));
       } else if (circuitWithA !== -1 && circuitWithB === -1) {
         // only a is currently in a circuit, b is not
-        acc[circuitWithA].add(b);
+        circuits[circuitWithA].add(b);
       } else if (circuitWithB !== -1 && circuitWithA === -1) {
         // only b is currently in a circuit, a is not
-        acc[circuitWithB].add(a);
+        circuits[circuitWithB].add(a);
       } else if (circuitWithA !== circuitWithB) {
         // need to combine circuits because a is in one and b is in another
-        acc[circuitWithA] = new Set([
-          ...acc[circuitWithA],
-          ...acc[circuitWithB],
+        circuits[circuitWithA] = new Set([
+          ...circuits[circuitWithA],
+          ...circuits[circuitWithB],
         ]);
-        acc.splice(circuitWithB, 1);
+        circuits.splice(circuitWithB, 1);
       }
     }
 
-    return acc;
-  }, []);
+    if (circuits[0] && circuits[0].size === junctionBoxes.length) {
+      lastConnection = [a, b];
+      break;
+    }
+  }
 
-  return circuits;
+  return { circuits, lastConnection };
 };
 
 const multiplyCircuits = (circuits) => {
@@ -99,4 +108,8 @@ const multiplyCircuits = (circuits) => {
     .slice(0, 3);
 
   return largestCircuits.reduce((acc, curr) => (acc *= curr), 1);
+};
+
+const multiplyLastConnection = (junctionBoxes, [a, b]) => {
+  return junctionBoxes[a][0] * junctionBoxes[b][0];
 };
