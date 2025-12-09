@@ -6,12 +6,12 @@ parseData(DAY9, (input) => {
   const timeStringData1 = `Day ${DAY9}, Data Setup Execution Time`;
   console.time(timeStringData1);
   const tiles = formatTiles(input);
-  const rectangles = getAllRectangles(tiles);
-  const areas = getAllAreas(rectangles);
   console.timeEnd(timeStringData1);
 
   const timeString1 = `Day ${DAY9}, Part 1 Execution Time`;
   console.time(timeString1);
+  const rectangles = getAllRectangles(tiles);
+  const areas = getAllAreas(rectangles);
   const part1 = getHighestArea(areas);
   console.timeEnd(timeString1);
 
@@ -177,18 +177,42 @@ const isRectangleInsidePolygon = (polygon, [x1, y1], [x2, y2]) => {
   for (const c of corners) {
     if (!isPointInsidePolygon(polygon, c)) return false;
   }
-  for (let x = minX; x <= maxX; x++) {
-    for (let y = minY; y <= maxY; y++) {
-      if (!isPointInsidePolygon(polygon, [x, y])) return false;
+
+  // For rectilinear polygons:
+  // if all corners are inside and no polygon edges cross the rectangle,
+  // then the entire rectangle is inside,
+  // so check if any polygon edge intersects the rectangle interior
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [x1, y1] = polygon[i];
+    const [x2, y2] = polygon[j];
+
+    // horizontal polygon edge
+    if (y1 === y2) {
+      const edgeY = y1;
+      const edgeMinX = Math.min(x1, x2);
+      const edgeMaxX = Math.max(x1, x2);
+
+      // if edge Y is strictly inside rectangle's Y range
+      // and overlaps with rectangle's X range, the polygon edge and rectangle intersect
+      if (edgeY > minY && edgeY < maxY && edgeMaxX > minX && edgeMinX < maxX)
+        return false;
+    }
+
+    // vertical polygon edge
+    if (x1 === x2) {
+      const edgeX = x1;
+      const edgeMinY = Math.min(y1, y2);
+      const edgeMaxY = Math.max(y1, y2);
+
+      // if edge X is strictly inside rectangle's X range
+      // and overlaps with rectangle's Y range, the polygon edge and rectangle intersect
+      if (edgeX > minX && edgeX < maxX && edgeMaxY > minY && edgeMinY < maxY)
+        return false;
     }
   }
 
   return true;
 };
-
-// const getAllValidRectangles = (rectangles, polygon) => {
-//   return rectangles.filter(([a, b]) => isRectangleInsidePolygon(polygon, a, b));
-// };
 
 const getHighestValidRectangleArea = (areas, polygon) => {
   const sortedAreas = Array.from(areas.keys()).sort((a, b) => b - a);
