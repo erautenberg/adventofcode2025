@@ -127,39 +127,6 @@ const getTileOrder = (tiles) => {
   return orderedTiles;
 };
 
-const isPointOnEdge = ([px, py], [xi, yi], [xj, yj]) => {
-  const vertical =
-    xi === xj && px === xi && Math.min(yi, yj) <= py && py <= Math.max(yi, yj);
-  if (vertical) return true;
-
-  const horizontal =
-    yi === yj && py === yi && Math.min(xi, xj) <= px && px <= Math.max(xi, xj);
-  if (horizontal) return true;
-
-  return false;
-};
-
-// Ray Casting Algorithm for rectilinear polygons
-// https://stackoverflow.com/questions/36735542/point-inside-a-polygon-javascript
-// https://www.youtube.com/watch?v=01E0RGb2Wzo
-const isPointInsidePolygon = (polygon, [px, py]) => {
-  let inside = false;
-
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
-
-    if (isPointOnEdge([px, py], [xi, yi], [xj, yj])) return true;
-
-    // Standard ray casting
-    const intersect =
-      yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
-  }
-
-  return inside;
-};
-
 const isRectangleInsidePolygon = (polygon, [x1, y1], [x2, y2]) => {
   const minX = Math.min(x1, x2);
   const maxX = Math.max(x1, x2);
@@ -173,11 +140,6 @@ const isRectangleInsidePolygon = (polygon, [x1, y1], [x2, y2]) => {
     [minX, maxY] // lower left
   ];
 
-  // potential short-circuit by checking corners before checking all points
-  for (const c of corners) {
-    if (!isPointInsidePolygon(polygon, c)) return false;
-  }
-
   // For rectilinear polygons:
   // if all corners are inside and no polygon edges cross the rectangle,
   // then the entire rectangle is inside,
@@ -186,27 +148,25 @@ const isRectangleInsidePolygon = (polygon, [x1, y1], [x2, y2]) => {
     const [x1, y1] = polygon[i];
     const [x2, y2] = polygon[j];
 
-    // horizontal polygon edge
+    // horizontal edge
     if (y1 === y2) {
-      const edgeY = y1;
       const edgeMinX = Math.min(x1, x2);
       const edgeMaxX = Math.max(x1, x2);
 
-      // if edge Y is strictly inside rectangle's Y range
-      // and overlaps with rectangle's X range, the polygon edge and rectangle intersect
-      if (edgeY > minY && edgeY < maxY && edgeMaxX > minX && edgeMinX < maxX)
+      // if edge Y is inside rectangle's Y range and overlaps with rectangle's X range,
+      // the polygon edge and rectangle intersect
+      if (y1 > minY && y1 < maxY && edgeMaxX > minX && edgeMinX < maxX)
         return false;
     }
 
-    // vertical polygon edge
+    // vertical edge
     if (x1 === x2) {
-      const edgeX = x1;
       const edgeMinY = Math.min(y1, y2);
       const edgeMaxY = Math.max(y1, y2);
 
-      // if edge X is strictly inside rectangle's X range
-      // and overlaps with rectangle's Y range, the polygon edge and rectangle intersect
-      if (edgeX > minX && edgeX < maxX && edgeMaxY > minY && edgeMinY < maxY)
+      // if edge X is inside rectangle's X range and overlaps with rectangle's Y range,
+      // the polygon edge and rectangle intersect
+      if (x1 > minX && x1 < maxX && edgeMaxY > minY && edgeMinY < maxY)
         return false;
     }
   }
