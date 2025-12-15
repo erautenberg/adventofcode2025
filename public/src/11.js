@@ -11,13 +11,12 @@ parseData(DAY11, (input) => {
 
   const timeString1 = `Day ${DAY11}, Part 1 Execution Time`;
   console.time(timeString1);
-  paths = findPaths(devices, ['you'], 'out');
-  const part1 = paths.length;
+  const part1 = getPathCount(devices, 'you', 'out');
   console.timeEnd(timeString1);
 
   const timeString2 = `Day ${DAY11}, Part 2 Execution Time`;
   console.time(timeString2);
-  const part2 = '';
+  const part2 = getPathCount(devices, 'svr', 'out', ['dac', 'fft']);
   console.timeEnd(timeString2);
 
   console.timeEnd(timeStringDay11);
@@ -32,18 +31,53 @@ const formatDevices = (input) => {
   }, {});
 };
 
-const findPaths = (devices, path = ['you'], end = 'out') => {
-  const currDevice = path.at(-1);
-  const outputs = devices[currDevice];
+const getPathCount = (
+  devices,
+  start,
+  end,
+  mustInclude = [],
+  visited = new Set([start]),
+  pathCache = new Map()
+) => {
+  const remainingStops = mustInclude
+    .filter((stop) => !visited.has(stop))
+    .sort()
+    .join(',');
+  const cacheKey = `${start}:${remainingStops}`;
 
-  if (outputs) {
-    if (outputs.includes(end)) return [[...path, end]];
+  if (pathCache.has(cacheKey)) return pathCache.get(cacheKey);
 
-    return outputs.reduce((acc, curr) => {
-      const paths = findPaths(devices, [...path, curr], end);
-      return paths ? [...acc, ...paths] : acc;
-    }, []);
+  const outputs = devices[start];
+
+  if (!outputs) {
+    pathCache.set(cacheKey, 0);
+    return 0;
   }
 
-  return [];
+  if (outputs.includes(end)) {
+    const allVisited = mustInclude.every((stop) => visited.has(stop));
+    const result = allVisited ? 1 : 0;
+    pathCache.set(cacheKey, result);
+    return result;
+  }
+
+  let totalPaths = 0;
+  for (const output of outputs) {
+    if (visited.has(output)) continue;
+
+    const uniqueVisited = new Set(visited);
+    uniqueVisited.add(output);
+
+    totalPaths += getPathCount(
+      devices,
+      output,
+      end,
+      mustInclude,
+      uniqueVisited,
+      pathCache
+    );
+  }
+
+  pathCache.set(cacheKey, totalPaths);
+  return totalPaths;
 };
